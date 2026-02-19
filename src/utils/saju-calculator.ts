@@ -64,7 +64,20 @@ export interface SajuResult {
   };
   currentDaewoonIndex: number | null;
   shensha: Shensha[];
+  todayFortune: DailyFortune; // New field
 }
+
+export interface DailyFortune {
+  date: string;
+  gan: string;
+  ji: string;
+  ganKr: string;
+  jiKr: string;
+  tenGod: TenGodLabel; // Relation of Today's Gan to Day Gan
+  comment: string;
+  lucky: boolean;
+}
+
 
 type Element = "wood" | "fire" | "earth" | "metal" | "water";
 type YinYang = "yang" | "yin";
@@ -425,6 +438,79 @@ function calculateShensha(
   return merged;
 }
 
+function calculateDailyFortune(dayGan: string, dayZhi: string): DailyFortune {
+  const now = new Date();
+  const solar = Solar.fromYmdHms(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    now.getDate(),
+    now.getHours(),
+    now.getMinutes(),
+    0
+  );
+  const lunar = solar.getLunar();
+  const eightChar = lunar.getEightChar();
+
+  const todayGan = eightChar.getDayGan();
+  const todayZhi = eightChar.getDayZhi();
+
+  const tenGod = calculateTenGods(dayGan, todayGan);
+
+  // Simple interpretation logic
+  let comment = "평온한 하루가 예상됩니다.";
+  let lucky = false;
+
+  const tenGodMeaning: Record<string, string> = {
+    "비견": "친구와 협력하거나 경쟁할 일이 생길 수 있습니다.",
+    "겁재": "의외의 지출 조심! 하지만 경쟁심이 불타오르는 날입니다.",
+    "식신": "맛있는 음식과 즐거운 대화가 따르는 날입니다.",
+    "상관": "톡톡 튀는 아이디어가 샘솟지만, 말실수는 조심하세요.",
+    "편재": "뜻밖의 횡재수나 재미있는 일이 생길 수 있습니다!",
+    "정재": "성실하게 일한 만큼 확실한 보상이 따르는 날입니다.",
+    "편관": "책임감이 필요한 날. 조금 바쁘더라도 명예가 따릅니다.",
+    "정관": "규칙을 지키고 순리대로 풀리는 안정적인 날입니다.",
+    "편인": "독창적인 생각이 떠오르거나 깊은 고민에 빠질 수 있습니다.",
+    "정인": "나를 도와주는 귀인을 만나거나 칭찬을 받을 수 있습니다.",
+  };
+
+  if (tenGod in tenGodMeaning) {
+    comment = tenGodMeaning[tenGod];
+  }
+
+  // Check for Clash (Chung) - Simple check
+  // Zi-Wu, Chou-Wei, Yin-Shen, Mao-You, Chen-Xu, Si-Hai
+  const clashes: Record<string, string> = {
+    "子": "午", "午": "子",
+    "丑": "未", "未": "丑",
+    "寅": "申", "申": "寅",
+    "卯": "酉", "酉": "卯",
+    "辰": "戌", "戌": "辰",
+    "巳": "亥", "亥": "巳",
+  };
+
+  if (clashes[dayZhi] === todayZhi) {
+    comment = "변동수가 강한 날입니다. 차분하게 대응하면 기회가 됩니다.";
+    lucky = false; // Caution
+  } else if (["편재", "식신", "정관", "정인"].includes(tenGod)) {
+    lucky = true;
+  }
+
+  // Helper for Kr
+  const toP = toPillar(todayGan, todayZhi);
+
+  return {
+    date: `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()}`,
+    gan: todayGan,
+    ji: todayZhi,
+    ganKr: toP.ganKr,
+    jiKr: toP.jiKr,
+    tenGod,
+    comment,
+    lucky,
+  };
+}
+
+
 export function calculateSaju(
   year: number,
   month: number,
@@ -524,5 +610,7 @@ export function calculateSaju(
     },
     currentDaewoonIndex,
     shensha,
+    todayFortune: calculateDailyFortune(dayGan, dayPillar.ji),
   };
 }
+

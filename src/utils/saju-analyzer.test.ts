@@ -25,6 +25,16 @@ function makeResult(overrides?: Partial<SajuResult>): SajuResult {
     currentAges: { international: 0, korean: 1 },
     currentDaewoonIndex: null,
     shensha: [],
+    todayFortune: {
+      date: "2026-02-19",
+      gan: "甲",
+      ji: "子",
+      ganKr: "갑",
+      jiKr: "자",
+      tenGod: "비견",
+      comment: "테스트용 운세",
+      lucky: true,
+    },
     ...overrides,
   };
 }

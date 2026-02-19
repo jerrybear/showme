@@ -52,7 +52,7 @@ a {
   gap: 20px;
 }
 
-.page-shell > * {
+.page-shell>* {
   width: 100%;
   min-width: 0;
 }
@@ -197,6 +197,27 @@ a {
   filter: grayscale(0.2);
 }
 
+.btn-secondary {
+  border: 1px solid var(--gold-2);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: rgba(212, 175, 55, 0.12);
+  color: #f5df9f;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(212, 175, 55, 0.2);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .error-box {
   margin-top: 14px;
   border: 1px solid var(--gold-2);
@@ -234,6 +255,34 @@ a {
 .result-header .muted {
   margin-top: 4px;
   font-size: 14px;
+}
+
+.share-action-row {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.share-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.share-capture {
+  margin-top: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(15, 15, 15, 0.85);
+}
+
+.share-capture-title {
+  text-align: center;
+  color: #f6e4aa;
+  font-size: 16px;
+  margin-bottom: 10px;
 }
 
 .pillar-grid {
@@ -542,6 +591,10 @@ a {
     min-width: 170px;
   }
 
+  .share-action-row {
+    align-items: flex-start;
+  }
+
   .element-row {
     grid-template-columns: 50px minmax(0, 1fr) 18px;
   }
@@ -568,6 +621,78 @@ a {
   width: min(100%, 360px);
   height: auto;
   overflow: visible;
+}
+
+.shensha-card {
+  padding: 9px 10px;
+}
+
+/* Daily Fortune */
+.daily-fortune-card {
+  margin-top: 20px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.7), rgba(10, 10, 10, 0.7));
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.daily-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.daily-title {
+  color: var(--gold-1);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.daily-date {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.daily-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.daily-badge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.daily-badge.lucky {
+  background: rgba(212, 175, 55, 0.2);
+  color: #ffdf80;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+}
+
+.daily-badge.normal {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.daily-ganzhi {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.daily-comment {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #f0f0f0;
+  word-break: keep-all;
 }
 
 .radar-grid {

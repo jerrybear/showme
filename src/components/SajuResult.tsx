@@ -1,7 +1,12 @@
+"use client";
+
+import { useRef, useState } from "react";
 import type { SajuPillar, SajuResult as SajuResultData, TenGodLabel } from "@/utils/saju-calculator";
 import type { CalendarType, Gender } from "@/utils/saju-ui-helpers";
 import AnalysisResult from "./AnalysisResult";
+import DailyFortune from "./DailyFortune";
 import { analyzeSaju } from "../utils/saju-analyzer";
+
 
 interface SajuResultProps {
   result: SajuResultData;
@@ -118,16 +123,75 @@ function PillarColumn({
   );
 }
 
+function downloadImage(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `saju-chart-${Date.now()}.png`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function SajuResult({ result, name, gender, calendarType }: SajuResultProps) {
   const analysis = analyzeSaju(result);
+  const shareCaptureRef = useRef<HTMLDivElement | null>(null);
+  const [isSharingImage, setIsSharingImage] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+
   const pillars = PILLAR_KEYS.map((key, index) => ({
+    key,
     label: PILLAR_LABELS[index],
     data: result[key],
+    tenGods: result.tenGods[key],
   }));
 
   const genderLabel = gender === "male" ? "남성" : "여성";
   const calendarLabel =
     calendarType === "solar" ? "양력" : calendarType === "lunar" ? "음력" : "음력(윤달)";
+
+  async function handleShareImage() {
+    if (!shareCaptureRef.current || isSharingImage) {
+      return;
+    }
+
+    setIsSharingImage(true);
+    setShareError(null);
+
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const canvas = await html2canvas(shareCaptureRef.current, {
+        backgroundColor: "#101010",
+        scale: Math.min(2, window.devicePixelRatio || 1),
+      });
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, "image/png");
+      });
+
+      if (!blob) {
+        throw new Error("이미지 변환에 실패했습니다.");
+      }
+
+      const file = new File([blob], `saju-chart-${Date.now()}.png`, { type: "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: "사주 명식표",
+          files: [file],
+        });
+        return;
+      }
+
+      downloadImage(blob);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+      const message = error instanceof Error ? error.message : "이미지 공유 중 오류가 발생했습니다.";
+      setShareError(message);
+    } finally {
+      setIsSharingImage(false);
+    }
+  }
 
   return (
     <section className="result-card" aria-live="polite">
@@ -139,24 +203,28 @@ export default function SajuResult({ result, name, gender, calendarType }: SajuR
         </p>
         <p className="muted">양력 {result.solarDate}</p>
       </header>
-      <div className="pillar-grid">
-        {pillars.map((pillar) => (
-          <PillarColumn
-            key={pillar.label}
-            label={pillar.label}
-            pillar={pillar.data}
-            tenGods={
-              pillar.label === "연주"
-                ? result.tenGods.year
-                : pillar.label === "월주"
-                  ? result.tenGods.month
-                  : pillar.label === "일주"
-                    ? result.tenGods.day
-                    : result.tenGods.time
-            }
-          />
-        ))}
+
+      <div className="share-action-row">
+        <button type="button" className="btn-secondary" onClick={handleShareImage} disabled={isSharingImage}>
+          {isSharingImage ? "이미지 준비 중..." : "명식표 이미지 공유"}
+        </button>
+        <p className="share-note">공유 이미지에는 이름, 성별, 생년월일 정보가 포함되지 않습니다.</p>
       </div>
+      {shareError ? (
+        <p className="inline-warning" role="alert">
+          {shareError}
+        </p>
+      ) : null}
+
+      <div ref={shareCaptureRef} className="share-capture" aria-label="공유용 사주 명식표">
+        <h3 className="share-capture-title">사주 명식표</h3>
+        <div className="pillar-grid">
+          {pillars.map((pillar) => (
+            <PillarColumn key={pillar.label} label={pillar.label} pillar={pillar.data} tenGods={pillar.tenGods} />
+          ))}
+        </div>
+      </div>
+
       <p className="result-footnote">음력 표기: {result.lunarDate}</p>
       <section className="daewoon-section">
         <h3 className="analysis-title">대운 흐름</h3>
@@ -181,6 +249,8 @@ export default function SajuResult({ result, name, gender, calendarType }: SajuR
         </div>
       </section>
       <AnalysisResult analysis={analysis} shensha={result.shensha} />
+      <DailyFortune fortune={result.todayFortune} />
     </section>
+
   );
 }
